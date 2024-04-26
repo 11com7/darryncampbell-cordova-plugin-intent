@@ -1,16 +1,7 @@
 *Please be aware that this application / sample is provided as-is for demonstration purposes without any guarantee of support*
 =========================================================
 
-[![npm version](http://img.shields.io/npm/v/com-darryncampbell-cordova-plugin-intent.svg?style=flat-square)](https://npmjs.org/package/com-darryncampbell-cordova-plugin-intent "View this project on npm")
-[![npm downloads](http://img.shields.io/npm/dm/com-darryncampbell-cordova-plugin-intent.svg?style=flat-square)](https://npmjs.org/package/com-darryncampbell-cordova-plugin-intent "View this project on npm")
-[![npm downloads](http://img.shields.io/npm/dt/com-darryncampbell-cordova-plugin-intent.svg?style=flat-square)](https://npmjs.org/package/com-darryncampbell-cordova-plugin-intent "View this project on npm")
-[![npm licence](http://img.shields.io/npm/l/com-darryncampbell-cordova-plugin-intent.svg?style=flat-square)](https://npmjs.org/package/com-darryncampbell-cordova-plugin-intent "View this project on npm")
-
-Note: this is the current underlying implementation for https://www.npmjs.com/package/@ionic-native/web-intent and https://ionicframework.com/docs/native/web-intent/
-
-# Android X support
-- For Android X Support please use version >= [2.x.x](https://www.npmjs.com/package/com-darryncampbell-cordova-plugin-intent/v/2.0.0) 
-- For Android Support Library please use version [1.3.x](https://www.npmjs.com/package/com-darryncampbell-cordova-plugin-intent/v/1.3.0)
+Warning: This fork is not actively maintained. Please refer to the [original repository: `darryncampbell/darryncampbell-cordova-plugin-intent`](https://github.com/darryncampbell/darryncampbell-cordova-plugin-intent).
 
 # Interaction with Camera Plugin
 If you are installing this plugin along with cordova-plugin-camera you **MUST install cordova-plugin-camera first.**
@@ -20,6 +11,7 @@ This Cordova plugin provides a general purpose shim layer for the Android intent
 
 ## Credits
 This project uses code released under the following MIT projects:
+- https://github.com/darryncampbell/darryncampbell-cordova-plugin-intent (marked as no longer maintained) 
 - https://github.com/napolitano/cordova-plugin-intent (marked as no longer maintained)
 - https://github.com/Initsogar/cordova-webintent.git (no longer available on github but the project is forked here: https://github.com/darryncampbell/cordova-webintent)
 This project is also released under MIT.  Credit is given in the code where appropriate
@@ -27,20 +19,9 @@ This project is also released under MIT.  Credit is given in the code where appr
 ## IntentShim
 This plugin defines a `window.plugins.intentShim` object which provides an API for interacting with the Android intent mechanism on any Android device.
 
-## Testing / Example
-An example application is available at https://github.com/darryncampbell/plugin-intent-api-exerciser to demonstrate the API and can be used to test the functionality.
-
 ## Installation
 
-### Cordova Version < 7
-    cordova plugin add https://github.com/darryncampbell/darryncampbell-cordova-plugin-intent.git
-
-### Cordova Version >= 7
-    cordova plugin add com-darryncampbell-cordova-plugin-intent
-
-## Use with PhoneGap
-
-Please use the latest PhoneGap cli when including this plugin, please refer to [Issue 63](https://github.com/darryncampbell/darryncampbell-cordova-plugin-intent/issues/63) for context. 
+    cordova plugin add https://github.com/11com7/darryncampbell-cordova-plugin-intent.git
 
 ## Supported Platforms
 - Android
@@ -322,9 +303,7 @@ The following constants are defined in the plugin for use in JavaScript
 - window.plugins.intentShim.ACTION_GET_CONTENT
 - window.plugins.intentShim.ACTION_PICK
 
-## Tested Versions
 
-Tested with Cordova version 6.5.0 and Cordova Android version 6.2.1
 
 
 
