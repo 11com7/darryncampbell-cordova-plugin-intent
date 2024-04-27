@@ -94,7 +94,7 @@ Send a broadcast intent to a specified action that contains a random number in t
 
     window.plugins.intentShim.startActivity(
         {
-            action: "com.darryncampbell.cordova.plugin.intent.ACTION",
+            action: "com.darryncampbell.plugin.intent.ACTION",
             extras: {
                     'random.number': Math.floor((Math.random() * 1000) + 1)
             }
