@@ -44,7 +44,9 @@ public class IntentContentReader {
 
       Log.d(LOG_TAG, "action: " + intent.getAction());
 
-      if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+      if (intent.getAction().equals(Intent.ACTION_VIEW)
+            || intent.getAction().equals(Intent.ACTION_EDIT)
+      ) {
          // dom, 2023-12-21: nur lesen, falls die Datei nicht breits ausgelesen wurde
          if (intent.hasExtra("content")) {
             return;
