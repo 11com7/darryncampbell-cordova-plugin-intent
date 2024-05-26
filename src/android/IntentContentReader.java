@@ -57,9 +57,9 @@ public class IntentContentReader {
             Uri uri = intent.getData();
             if (uri != null) {
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                try (
-                        InputStream inputStream = contentResolver.openInputStream(uri);
-                ) {
+                try {
+                    InputStream inputStream = contentResolver.openInputStream(uri);
+
                     if (null != inputStream) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
