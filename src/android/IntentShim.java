@@ -2,7 +2,6 @@ package com.darryncampbell.plugin.intent;
 
 import static android.os.Environment.getExternalStorageState;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -24,8 +23,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.MimeTypeMap;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.darryncampbell.plugin.intent.IntentContentReader;
@@ -305,17 +302,6 @@ public class IntentShim extends CordovaPlugin {
 
     private Uri remapUriWithFileProvider(String uriAsString, final CallbackContext callbackContext) {
         //  Create the URI via FileProvider  Special case for N and above when installing apks
-        int permissionCheck = ContextCompat.checkSelfPermission(this.cordova.getActivity(),
-                Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            //  Could do better here - if the app does not already have permission should
-            //  only continue when we get the success callback from this.
-            ActivityCompat.requestPermissions(this.cordova.getActivity(),
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-            callbackContext.error("Please grant read external storage permission");
-            return null;
-        }
-
         try {
             String externalStorageState = getExternalStorageState();
             if (externalStorageState.equals(Environment.MEDIA_MOUNTED) || externalStorageState.equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
@@ -349,55 +335,99 @@ public class IntentShim extends CordovaPlugin {
             Log.w(LOG_TAG, "URI is not a specified parameter");
             throw new JSONException("URI is not a specified parameter");
         }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-            String filePath = "";
-            if (uri.getHost().contains("com.android.providers.media")) {
-                int permissionCheck = ContextCompat.checkSelfPermission(this.cordova.getActivity(),
-                        Manifest.permission.READ_EXTERNAL_STORAGE);
-                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                    //  Could do better here - if the app does not already have permission should
-                    //  only continue when we get the success callback from this.
-                    ActivityCompat.requestPermissions(this.cordova.getActivity(),
-                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-                    callbackContext.error("Please grant read external storage permission");
-                    return null;
-                }
 
-                // Image pick from recent
-                String wholeID = DocumentsContract.getDocumentId(uri);
+        ContentResolver contentResolver = this.cordova.getActivity().getApplicationContext().getContentResolver();
+        String filePath = null;
 
-                // Split at colon, use second item in the array
-                String id = wholeID.split(":")[1];
-
-                String[] column = {MediaStore.Images.Media.DATA};
-
-                // where id is equal to
-                String sel = MediaStore.Images.Media._ID + "=?";
-
-                //  This line requires read storage permission
-
-                Cursor cursor = this.cordova.getActivity().getApplicationContext().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        column, sel, new String[]{id}, null);
-
-                int columnIndex = cursor.getColumnIndex(column[0]);
-
-                if (cursor.moveToFirst()) {
-                    filePath = cursor.getString(columnIndex);
-                }
-                cursor.close();
-                return filePath;
-            } else {
-                // image pick from gallery
-                String[] proj = {MediaStore.Images.Media.DATA};
-                Cursor cursor = this.cordova.getActivity().getApplicationContext().getContentResolver().query(uri, proj, null, null, null);
-                int column_index
-                        = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToFirst();
-                return cursor.getString(column_index);
-            }
+        // Path A: MediaStore document URIs (e.g. from document picker)
+        String host = uri.getHost();
+        if (host != null && host.contains("com.android.providers.media")) {
+            filePath = getPathFromMediaStoreDocument(uri, contentResolver);
         }
 
-        return "Requires KK or higher";
+        // Path B: Other content:// URIs (e.g. gallery pick)
+        if (filePath == null && "content".equalsIgnoreCase(uri.getScheme())) {
+            filePath = getPathFromContentUri(uri, contentResolver);
+        }
+
+        // Fallback: return URI string (always usable with ContentResolver)
+        if (filePath == null || filePath.isEmpty()) {
+            Log.d(LOG_TAG, "Could not resolve file path, returning URI string: " + uri.toString());
+            filePath = uri.toString();
+        }
+
+        return filePath;
+    }
+
+    /**
+     * Attempts to resolve a file path from a MediaStore document URI.
+     * Uses the _data column which works on API 26-28 and on some API 29+ devices.
+     * Returns null if the path cannot be resolved.
+     */
+    private String getPathFromMediaStoreDocument(Uri uri, ContentResolver contentResolver) {
+        Cursor cursor = null;
+        try {
+            String wholeID = DocumentsContract.getDocumentId(uri);
+            if (wholeID == null || !wholeID.contains(":")) {
+                Log.w(LOG_TAG, "Unexpected document ID format: " + wholeID);
+                return null;
+            }
+
+            String id = wholeID.split(":")[1];
+            String[] column = {MediaStore.Images.Media.DATA};
+            String selection = MediaStore.Images.Media._ID + "=?";
+
+            cursor = contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    column, selection, new String[]{id}, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndex(column[0]);
+                if (columnIndex >= 0) {
+                    String path = cursor.getString(columnIndex);
+                    if (path != null && !path.isEmpty()) {
+                        return path;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Error resolving MediaStore document path", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Attempts to resolve a file path from a generic content:// URI.
+     * Uses the _data column which works on API 26-28 and on some API 29+ devices.
+     * Returns null if the path cannot be resolved.
+     */
+    private String getPathFromContentUri(Uri uri, ContentResolver contentResolver) {
+        Cursor cursor = null;
+        try {
+            String[] projection = {MediaStore.Images.Media.DATA};
+            cursor = contentResolver.query(uri, projection, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+                if (columnIndex >= 0) {
+                    String path = cursor.getString(columnIndex);
+                    if (path != null && !path.isEmpty()) {
+                        return path;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w(LOG_TAG, "Error resolving content URI path", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
     }
 
     private void startActivity(Intent i, boolean bExpectResult, int requestCode, CallbackContext callbackContext) {
