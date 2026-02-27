@@ -19,5 +19,13 @@
     "Intent"
   ],
   "author": "Darryn Campbell",
-  "license": "MIT"
+  "license": "MIT",
+  "files": [
+    "www/",
+    "src/",
+    "hooks/",
+    "plugin.xml",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
 }
