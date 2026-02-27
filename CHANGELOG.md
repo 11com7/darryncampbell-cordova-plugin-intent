@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.42.2] — 2026-02-27
+
+### Fixed
+
+- Removed invalid `mode="merge"` attribute from `<config-file>` entries in `plugin.xml` — the attribute belongs to `<edit-config>` and caused cordova-common to resolve the file path as "undefined"
+- Removed redundant `platform="android"` attribute from `<config-file>` entries inside `<platform name="android">` — caused "config file undefined" warnings in cordova-android 14+
+
 ## [2.42.0] — 2026-02-27
 
 ### Fixed
